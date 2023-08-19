@@ -1,10 +1,13 @@
 import express, { Express, Request, Response } from "express";
 import axios from "axios";
 import Joi from "joi"
+import * as dotenv from "dotenv";
+dotenv.config();
 
 const app: Express = express();
-const port = 3000;
-const API_KEY = "344f9a8aa7msheb89d0439e4f0ffp165a03jsn5dcdd8f75d8f";
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello World!");
@@ -31,7 +34,7 @@ if (error) {
       `https://flight-radar1.p.rapidapi.com/flights/search`,
       {
         headers: {
-          "X-RapidAPI-Key": API_KEY,
+          "X-RapidAPI-Key": process.env.API_KEY,
         },
         params: {
           departure: departureAirport,
@@ -58,6 +61,7 @@ app.use("*", (req: Request, res: Response) => {
   return res.status(404).json({ message: "route not found" });
 });
 
-app.listen(port, () => {
-  return console.log(`Express is listening at http://localhost:${port}`);
+const Port = process.env.PORT || 4000
+app.listen(Port, () => {
+  return console.log(`Express is listening at http://localhost:${Port}`);
 });
