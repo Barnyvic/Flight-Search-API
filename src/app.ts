@@ -1,6 +1,6 @@
 import express, { Express, Request, Response } from "express";
 import axios from "axios";
-import Joi from "joi"
+import Joi from "joi";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -14,18 +14,16 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.get("/flights/search", async (req, res) => {
+  const schema = Joi.object({
+    departureAirport: Joi.string().required(),
+    arrivalAirport: Joi.string().required(),
+    date: Joi.date().iso().required(),
+  });
 
-
-const schema = Joi.object({
-  departureAirport: Joi.string().required(),
-  arrivalAirport: Joi.string().required(),
-  date: Joi.date().iso().required(),
-});
-
-const { error } = schema.validate(req.query);
-if (error) {
-  return res.status(400).json({ error: error.details[0].message });
-}
+  const { error } = schema.validate(req.query);
+  if (error) {
+    return res.status(400).json({ error: error.details[0].message });
+  }
 
   const { departureAirport, arrivalAirport, date } = req.query;
 
@@ -50,7 +48,13 @@ if (error) {
       message: flightData.message,
     });
   } catch (error) {
-    console.error("Error fetching flight data:", error);
+    if (axios.isAxiosError(error)) {
+      const { response } = error;
+      if (response) {
+        return res.status(response.status).json({ error: response.data });
+      }
+    }
+
     res
       .status(500)
       .json({ error: "An error occurred while fetching flight data" });
@@ -61,7 +65,7 @@ app.use("*", (req: Request, res: Response) => {
   return res.status(404).json({ message: "route not found" });
 });
 
-const Port = process.env.PORT || 4000
+const Port = process.env.PORT || 4000;
 app.listen(Port, () => {
   return console.log(`Express is listening at http://localhost:${Port}`);
 });
